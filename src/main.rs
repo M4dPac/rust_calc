@@ -7,7 +7,7 @@ fn read_input() -> String {
     loop {
         let mut s = String::new();
         if io::stdin().read_line(&mut s).is_err() {
-            eprintln!("Ошибка ввода.");
+            eprintln!("Ошибка чтения ввода.");
             continue;
         }
 
@@ -16,8 +16,14 @@ fn read_input() -> String {
 }
 
 fn run_repl() {
+    println!("Введите выражение (или 'exit' для выхода):");
     loop {
         let input = read_input();
+
+        if &input == "exit" {
+            break;
+        }
+
         println!("{input}");
     }
 }
