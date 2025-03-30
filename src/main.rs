@@ -18,5 +18,6 @@ fn read_input() -> String {
 fn run_repl() {
     loop {
         let input = read_input();
+        println!("{input}");
     }
 }
