@@ -1,4 +1,7 @@
 use std::io;
+
+use calculator::parser;
+
 fn main() {
     run_repl();
 }
@@ -23,6 +26,8 @@ fn run_repl() {
         if &input == "exit" {
             break;
         }
+
+        let tokens = parser::tokenize(&input);
 
         println!("{input}");
     }
