@@ -14,7 +14,7 @@ pub enum CalcError {
 impl fmt::Display for CalcError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let message = match self {
-            CalcError::InvalidToken(token) => format!("Неверное число: {}", token),
+            CalcError::InvalidToken(token) => format!("Некорректный символ: {}", token),
             CalcError::UnmatchedParens => "Не совпадают скобки.".to_owned(),
             CalcError::DivideByZero => "Деление на 0.".to_owned(),
             CalcError::InvalidExpression(expr) => format!("Некорректное выражение: {}", expr),
@@ -35,7 +35,7 @@ mod tests {
     #[test]
     fn test_invalid_token() {
         let error = CalcError::InvalidToken("abc".to_string());
-        assert_eq!(format!("{}", error), "Error: Неверное число: abc");
+        assert_eq!(format!("{}", error), "Error: Некорректный символ: abc");
     }
 
     #[test]
