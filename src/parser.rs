@@ -11,6 +11,17 @@ pub enum Token {
     RParen,
 }
 
+impl Token {
+    pub fn precedence(&self) -> u8 {
+        match self {
+            Token::Number(_) => 0,
+            Token::LParen | Token::RParen => 1,
+            Token::Plus | Token::Minus => 2,
+            Token::Multiply | Token::Divide => 3,
+        }
+    }
+}
+
 fn get_token(c: char) -> Result<Token, CalcError> {
     let result = match c {
         '+' => Token::Plus,
@@ -231,5 +242,71 @@ mod tests {
     fn test_tokenize_scientific_notation() {
         let input = "1e10";
         assert!(matches!(tokenize(input), Err(CalcError::InvalidToken(_))));
+    }
+
+    // Тесты для precedence
+
+    #[test]
+    fn test_precedence_number() {
+        let number = Token::Number(1.0);
+        assert_eq!(number.precedence(), 0);
+    }
+
+    #[test]
+    fn test_precedence_parentheses() {
+        let lparen = Token::LParen;
+        let rparen = Token::RParen;
+        assert_eq!(lparen.precedence(), 1);
+        assert_eq!(rparen.precedence(), 1);
+    }
+
+    #[test]
+    fn test_precedence_plus_minus() {
+        let plus = Token::Plus;
+        let minus = Token::Minus;
+        assert_eq!(plus.precedence(), 2);
+        assert_eq!(minus.precedence(), 2);
+    }
+
+    #[test]
+    fn test_precedence_multiply_divide() {
+        let multiply = Token::Multiply;
+        let divide = Token::Divide;
+        assert_eq!(multiply.precedence(), 3);
+        assert_eq!(divide.precedence(), 3);
+    }
+
+    #[test]
+    fn test_precedence_comparison() {
+        let number = Token::Number(1.0);
+        let plus = Token::Plus;
+        let multiply = Token::Multiply;
+        let lparen = Token::LParen;
+        let rparen = Token::RParen;
+
+        assert!(number.precedence() < plus.precedence());
+        assert!(number.precedence() < multiply.precedence());
+        assert!(number.precedence() < lparen.precedence());
+        assert!(number.precedence() < rparen.precedence());
+
+        assert!(plus.precedence() > number.precedence());
+        assert!(plus.precedence() < multiply.precedence());
+        assert!(plus.precedence() > lparen.precedence());
+        assert!(plus.precedence() > rparen.precedence());
+
+        assert!(multiply.precedence() > number.precedence());
+        assert!(multiply.precedence() > plus.precedence());
+        assert!(multiply.precedence() > lparen.precedence());
+        assert!(multiply.precedence() > rparen.precedence());
+
+        assert!(lparen.precedence() > number.precedence());
+        assert!(lparen.precedence() < multiply.precedence());
+        assert!(lparen.precedence() < plus.precedence());
+        assert_eq!(lparen.precedence(), rparen.precedence());
+
+        assert!(rparen.precedence() > number.precedence());
+        assert!(rparen.precedence() < multiply.precedence());
+        assert!(rparen.precedence() < plus.precedence());
+        assert_eq!(rparen.precedence(), lparen.precedence());
     }
 }

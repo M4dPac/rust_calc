@@ -33,23 +33,23 @@ mod tests {
     use super::CalcError;
 
     #[test]
-    fn test_invalid_token() {
+    fn test_calcerror_invalid_token() {
         let error = CalcError::InvalidToken("abc".to_string());
         assert_eq!(format!("{}", error), "Error: Некорректный символ: abc");
     }
 
     #[test]
-    fn test_unmatched_parens() {
+    fn test_calcerror_unmatched_parens() {
         let error = CalcError::UnmatchedParens;
         assert_eq!(format!("{}", error), "Error: Не совпадают скобки.");
     }
     #[test]
-    fn test_divide_by_zero() {
+    fn test_calcerror_divide_by_zero() {
         let error = CalcError::DivideByZero;
         assert_eq!(format!("{}", error), "Error: Деление на 0.");
     }
     #[test]
-    fn test_invalid_expression() {
+    fn test_calcerror_invalid_expression() {
         let error = CalcError::InvalidExpression("1 + 2 *".to_string());
         assert_eq!(
             format!("{}", error),
