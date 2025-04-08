@@ -74,6 +74,28 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, CalcError> {
     Ok(tokens)
 }
 
+/// Проверяет корректность скобок.
+pub fn validate_parens(tokens: &[Token]) -> Result<(), CalcError> {
+    let mut balance = 0;
+    for token in tokens {
+        match token {
+            Token::LParen => balance += 1,
+            Token::RParen => balance -= 1,
+            _ => {}
+        }
+
+        if balance < 0 {
+            return Err(CalcError::UnmatchedParens);
+        }
+    }
+
+    if balance != 0 {
+        return Err(CalcError::UnmatchedParens);
+    }
+
+    Ok(())
+}
+
 // Модуль для тестов
 #[cfg(test)]
 mod tests {
