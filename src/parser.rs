@@ -98,7 +98,7 @@ pub fn validate_parens(tokens: &[Token]) -> Result<(), CalcError> {
 
 // Модуль для тестов
 #[cfg(test)]
-mod tests {
+mod tests_tokenize {
     use super::*;
 
     #[test]
@@ -265,8 +265,12 @@ mod tests {
         let input = "1e10";
         assert!(matches!(tokenize(input), Err(CalcError::InvalidToken(_))));
     }
+}
 
-    // Тесты для precedence
+// Тесты для precedence
+#[cfg(test)]
+mod tests_precedence {
+    use super::*;
 
     #[test]
     fn test_precedence_number() {
@@ -330,5 +334,153 @@ mod tests {
         assert!(rparen.precedence() < multiply.precedence());
         assert!(rparen.precedence() < plus.precedence());
         assert_eq!(rparen.precedence(), lparen.precedence());
+    }
+}
+
+// Тесты для validate_parens
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_validate_parens_valid_simple() {
+        let tokens = vec![Token::Number(1.0), Token::Plus, Token::Number(2.0)];
+        assert_eq!(validate_parens(&tokens), Ok(()));
+    }
+
+    #[test]
+    fn test_validate_parens_valid_nested() {
+        let tokens = vec![
+            Token::LParen,
+            Token::Number(1.0),
+            Token::Plus,
+            Token::LParen,
+            Token::Number(2.0),
+            Token::Multiply,
+            Token::Number(3.0),
+            Token::RParen,
+            Token::RParen,
+        ];
+        assert_eq!(validate_parens(&tokens), Ok(()));
+    }
+
+    #[test]
+    fn test_validate_parens_valid_mixed() {
+        let tokens = vec![
+            Token::Number(1.0),
+            Token::Plus,
+            Token::LParen,
+            Token::Number(2.0),
+            Token::Minus,
+            Token::Number(3.0),
+            Token::RParen,
+            Token::Multiply,
+            Token::Number(4.0),
+        ];
+        assert_eq!(validate_parens(&tokens), Ok(()));
+    }
+
+    #[test]
+    fn test_validate_parens_invalid_unmatched_open() {
+        let tokens = vec![
+            Token::LParen,
+            Token::Number(1.0),
+            Token::Plus,
+            Token::Number(2.0),
+        ];
+        assert!(matches!(
+            validate_parens(&tokens),
+            Err(CalcError::UnmatchedParens)
+        ));
+    }
+
+    #[test]
+    fn test_validate_parens_invalid_unmatched_close() {
+        let tokens = vec![
+            Token::Number(1.0),
+            Token::Plus,
+            Token::Number(2.0),
+            Token::RParen,
+        ];
+        assert!(matches!(
+            validate_parens(&tokens),
+            Err(CalcError::UnmatchedParens)
+        ));
+    }
+
+    #[test]
+    fn test_validate_parens_invalid_extra_open() {
+        let tokens = vec![
+            Token::LParen,
+            Token::LParen,
+            Token::Number(1.0),
+            Token::Plus,
+            Token::Number(2.0),
+            Token::RParen,
+        ];
+        assert!(matches!(
+            validate_parens(&tokens),
+            Err(CalcError::UnmatchedParens)
+        ));
+    }
+
+    #[test]
+    fn test_validate_parens_invalid_extra_close() {
+        let tokens = vec![
+            Token::Number(1.0),
+            Token::Plus,
+            Token::Number(2.0),
+            Token::RParen,
+            Token::RParen,
+        ];
+        assert!(matches!(
+            validate_parens(&tokens),
+            Err(CalcError::UnmatchedParens)
+        ));
+    }
+
+    #[test]
+    fn test_validate_parens_invalid_mismatched_order() {
+        let tokens = vec![
+            Token::RParen,
+            Token::Number(1.0),
+            Token::Plus,
+            Token::Number(2.0),
+            Token::LParen,
+        ];
+        assert!(matches!(
+            validate_parens(&tokens),
+            Err(CalcError::UnmatchedParens)
+        ));
+    }
+
+    #[test]
+    fn test_validate_parens_invalid_empty_parens() {
+        let tokens = vec![Token::LParen, Token::RParen, Token::Number(1.0)];
+        assert_eq!(validate_parens(&tokens), Ok(()));
+    }
+
+    #[test]
+    fn test_validate_parens_invalid_consecutive_parens() {
+        let tokens = vec![Token::LParen, Token::RParen, Token::LParen, Token::RParen];
+        assert_eq!(validate_parens(&tokens), Ok(()));
+    }
+
+    #[test]
+    fn test_validate_parens_invalid_unmatched_nested() {
+        let tokens = vec![
+            Token::LParen,
+            Token::Number(1.0),
+            Token::Plus,
+            Token::LParen,
+            Token::Number(2.0),
+            Token::Multiply,
+            Token::Number(3.0),
+            Token::RParen,
+        ];
+        assert!(matches!(
+            validate_parens(&tokens),
+            Err(CalcError::UnmatchedParens)
+        ));
     }
 }

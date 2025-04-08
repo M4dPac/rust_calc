@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fmt;
 
 // Определяем перечисление для ошибок калькулятора
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum CalcError {
     InvalidToken(String),
     UnmatchedParens,
