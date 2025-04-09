@@ -9,7 +9,7 @@ pub fn to_rpn(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
     for token in tokens {
         match token {
             Token::Number(_) => output.push(token),
-            Token::LParen => operators.push(token),
+            Token::LParen | Token::UnaryMinus => operators.push(token),
             Token::RParen => {
                 while let Some(top) = operators.pop() {
                     match top {
@@ -130,7 +130,7 @@ mod tests_to_rpn {
     fn test_to_rpn_negative_number() {
         let input = "-5";
         let tokens = tokenize(input).unwrap();
-        let expected = vec![Token::Minus, Token::Number(5.0)];
+        let expected = vec![Token::UnaryMinus, Token::Number(5.0)];
         assert_eq!(to_rpn(tokens).unwrap(), expected);
     }
 
