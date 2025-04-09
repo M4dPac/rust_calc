@@ -1,6 +1,6 @@
 use std::io;
 
-use calculator::{error::CalcError, parser};
+use calculator::{error::CalcError, parser, rpn};
 
 fn main() {
     run_repl().unwrap();
@@ -29,8 +29,9 @@ fn run_repl() -> Result<(), CalcError> {
 
         let tokens = parser::tokenize(&input)?;
         parser::validate_parens(&tokens)?;
+        let rpn = rpn::to_rpn(tokens)?;
 
-        println!("{input}");
+        println!("{:?}", rpn);
     }
 
     Ok(())
