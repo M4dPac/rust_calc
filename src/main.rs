@@ -1,9 +1,9 @@
 use std::io;
 
-use calculator::parser;
+use calculator::{error::CalcError, parser};
 
 fn main() {
-    run_repl();
+    run_repl().unwrap();
 }
 
 fn read_input() -> String {
@@ -18,7 +18,7 @@ fn read_input() -> String {
     }
 }
 
-fn run_repl() {
+fn run_repl() -> Result<(), CalcError> {
     println!("Введите выражение (или 'exit' для выхода):");
     loop {
         let input = read_input();
@@ -27,8 +27,11 @@ fn run_repl() {
             break;
         }
 
-        let tokens = parser::tokenize(&input);
+        let tokens = parser::tokenize(&input)?;
+        parser::validate_parens(&tokens)?;
 
         println!("{input}");
     }
+
+    Ok(())
 }
