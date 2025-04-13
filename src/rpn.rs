@@ -1,20 +1,22 @@
+use std::collections::VecDeque;
+
 use crate::error::CalcError;
 use crate::parser::Token;
 
 /// Алгоритм сортировочной станции (Shunting-yard)
-pub fn to_rpn(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
-    let mut output: Vec<Token> = Vec::with_capacity(tokens.len());
+pub fn to_rpn(tokens: Vec<Token>) -> Result<VecDeque<Token>, CalcError> {
+    let mut output: VecDeque<Token> = VecDeque::with_capacity(tokens.len());
     let mut operators: Vec<Token> = Vec::new();
 
     for token in tokens {
         match token {
-            Token::Number(_) => output.push(token),
+            Token::Number(_) => output.push_back(token),
             Token::LParen | Token::UnaryMinus => operators.push(token),
             Token::RParen => {
                 while let Some(top) = operators.pop() {
                     match top {
                         Token::LParen => break,
-                        _ => output.push(top),
+                        _ => output.push_back(top),
                     }
 
                     // Проверяем на наличие непарных скобок
@@ -26,7 +28,7 @@ pub fn to_rpn(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
             Token::Plus | Token::Minus | Token::Multiply | Token::Divide => {
                 while let Some(top) = operators.last() {
                     if top.precedence() >= token.precedence() {
-                        output.push(operators.pop().unwrap());
+                        output.push_back(operators.pop().unwrap());
                     } else {
                         break;
                     }
@@ -41,10 +43,46 @@ pub fn to_rpn(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
         if op == Token::LParen {
             return Err(CalcError::UnmatchedParens);
         }
-        output.push(op);
+        output.push_back(op);
     }
 
     Ok(output)
+}
+
+/// Вычисляет результат ОПЗ.
+pub fn eval_rpn(mut rpn: VecDeque<Token>) -> Result<f64, CalcError> {
+    let mut stack: Vec<f64> = Vec::new();
+
+    while let Some(token) = rpn.pop_front() {
+        match token {
+            Token::Number(num) => stack.push(num),
+            Token::UnaryMinus => {
+                let Some(x) = stack.pop() else {
+                    return Err(CalcError::InvalidExpression("".to_string()));
+                };
+
+                stack.push(-x);
+            }
+            _ => {
+                let (Some(b), Some(a)) = (stack.pop(), stack.pop()) else {
+                    return Err(CalcError::InvalidExpression("".to_string()));
+                };
+
+                stack.push(match token {
+                    Token::Plus => a + b,
+                    Token::Minus => a - b,
+                    Token::Multiply => a * b,
+                    Token::Divide => a / b,
+                    _ => return Err(CalcError::InvalidToken("".to_string())),
+                });
+            }
+        }
+    }
+
+    match (stack.pop(), stack.is_empty()) {
+        (Some(result), true) => Ok(result),
+        (_, _) => Err(CalcError::InvalidExpression("".to_string())),
+    }
 }
 
 #[cfg(test)]

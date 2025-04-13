@@ -30,8 +30,9 @@ fn run_repl() -> Result<(), CalcError> {
         let tokens = parser::tokenize(&input)?;
         parser::validate_parens(&tokens)?;
         let rpn = rpn::to_rpn(tokens)?;
+        let result = rpn::eval_rpn(rpn)?;
 
-        println!("{:?}", rpn);
+        println!("{:?}", result);
     }
 
     Ok(())
