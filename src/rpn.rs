@@ -257,3 +257,138 @@ mod tests_to_rpn {
         assert_eq!(to_rpn(tokens).unwrap(), expected);
     }
 }
+
+#[cfg(test)]
+mod tests_eval_rpn {
+    use super::*;
+    use crate::parser::Token;
+    use std::collections::VecDeque;
+
+    #[test]
+    fn test_eval_rpn_simple_expression() {
+        // Проверка простого сложения: 2 + 3
+        let tokens: VecDeque<Token> = vec![Token::Number(2.0), Token::Number(3.0), Token::Plus]
+            .into_iter()
+            .collect();
+        assert_eq!(eval_rpn(tokens).unwrap(), 5.0);
+    }
+
+    #[test]
+    fn test_eval_rpn_complex_expression() {
+        // Проверка сложного выражения: 12.5 - 4.2 * (3 / 7)
+        let tokens: VecDeque<Token> = vec![
+            Token::Number(12.5),
+            Token::Number(4.2),
+            Token::Number(3.0),
+            Token::Number(7.0),
+            Token::Divide,
+            Token::Multiply,
+            Token::Minus,
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(eval_rpn(tokens).unwrap(), 10.7);
+    }
+
+    #[test]
+    fn test_eval_rpn_unary_minus() {
+        // Проверка отрицательного числа: -5
+        let tokens: VecDeque<Token> = vec![Token::Number(5.0), Token::UnaryMinus]
+            .into_iter()
+            .collect();
+        assert_eq!(eval_rpn(tokens).unwrap(), -5.0);
+    }
+
+    #[test]
+    fn test_eval_rpn_unary_minus_in_expression() {
+        // Проверка унарного минуса внутри выражения: 2 - (-3)
+        let tokens: VecDeque<Token> = vec![
+            Token::Number(2.0),
+            Token::Number(3.0),
+            Token::UnaryMinus,
+            Token::Minus,
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(eval_rpn(tokens).unwrap(), 5.0);
+    }
+
+    #[test]
+    fn test_eval_rpn_operator_precedence() {
+        // Проверка приоритета операторов: 1 + 2 * 3
+        let tokens: VecDeque<Token> = vec![
+            Token::Number(1.0),
+            Token::Number(2.0),
+            Token::Number(3.0),
+            Token::Multiply,
+            Token::Plus,
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(eval_rpn(tokens).unwrap(), 7.0);
+
+        // Проверка приоритета операторов: 1 * 2 + 3
+        let tokens: VecDeque<Token> = vec![
+            Token::Number(1.0),
+            Token::Number(2.0),
+            Token::Multiply,
+            Token::Number(3.0),
+            Token::Plus,
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(eval_rpn(tokens).unwrap(), 5.0);
+    }
+
+    #[test]
+    fn test_eval_rpn_associativity() {
+        // Проверка ассоциативности операторов: 1 - 2 - 3
+        let tokens: VecDeque<Token> = vec![
+            Token::Number(1.0),
+            Token::Number(2.0),
+            Token::Minus,
+            Token::Number(3.0),
+            Token::Minus,
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(eval_rpn(tokens).unwrap(), -4.0);
+    }
+
+    #[test]
+    fn test_eval_rpn_divide_by_zero() {
+        // Проверка деления на ноль: 1 / 0
+        let tokens: VecDeque<Token> = vec![Token::Number(1.0), Token::Number(0.0), Token::Divide]
+            .into_iter()
+            .collect();
+        assert!(matches!(eval_rpn(tokens), Err(CalcError::DivideByZero)));
+    }
+
+    #[test]
+    fn test_eval_rpn_invalid_expression() {
+        // Проверка некорректного выражения: недостаточно операндов
+        let tokens: VecDeque<Token> = vec![Token::Number(1.0), Token::Plus].into_iter().collect();
+        assert!(matches!(
+            eval_rpn(tokens),
+            Err(CalcError::InvalidExpression(_))
+        ));
+
+        // Проверка некорректного выражения: некорректное расположение операторов
+        let tokens: VecDeque<Token> = vec![Token::Plus, Token::Number(1.0), Token::Number(2.0)]
+            .into_iter()
+            .collect();
+        assert!(matches!(
+            eval_rpn(tokens),
+            Err(CalcError::InvalidExpression(_))
+        ));
+    }
+
+    #[test]
+    fn test_eval_rpn_invalid_token() {
+        // Проверка некорректного токена: скобка в выражении
+        let tokens: VecDeque<Token> = vec![Token::Number(1.0), Token::Number(2.0), Token::LParen]
+            .into_iter()
+            .collect();
+        assert!(matches!(eval_rpn(tokens), Err(CalcError::InvalidToken(_))));
+    }
+}
