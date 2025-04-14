@@ -72,7 +72,12 @@ pub fn eval_rpn(mut rpn: VecDeque<Token>) -> Result<f64, CalcError> {
                     Token::Plus => a + b,
                     Token::Minus => a - b,
                     Token::Multiply => a * b,
-                    Token::Divide => a / b,
+                    Token::Divide => {
+                        if b == 0.0 {
+                            return Err(CalcError::DivideByZero);
+                        }
+                        a / b
+                    }
                     _ => return Err(CalcError::InvalidToken("".to_string())),
                 });
             }
