@@ -10,6 +10,7 @@ pub enum Token {
     Divide,
     LParen,
     RParen,
+    Power,
 }
 
 impl Token {
@@ -20,6 +21,7 @@ impl Token {
             Token::Plus | Token::Minus => 2,
             Token::Multiply | Token::Divide => 3,
             Token::UnaryMinus => 4,
+            Token::Power => 5,
         }
     }
 }
@@ -52,6 +54,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, CalcError> {
         }
 
         let token = match c {
+            '^' => Token::Power,
             '+' => Token::Plus,
             '-' => {
                 // Проверяем на символ на унарный минус

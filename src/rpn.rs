@@ -11,7 +11,7 @@ pub fn to_rpn(tokens: Vec<Token>) -> Result<VecDeque<Token>, CalcError> {
     for token in tokens {
         match token {
             Token::Number(_) => output.push_back(token),
-            Token::LParen | Token::UnaryMinus => operators.push(token),
+            Token::LParen | Token::UnaryMinus | Token::Power => operators.push(token),
             Token::RParen => {
                 while let Some(top) = operators.pop() {
                     match top {
@@ -74,6 +74,7 @@ pub fn eval_rpn(mut rpn: VecDeque<Token>) -> Result<f64, CalcError> {
                 };
 
                 stack.push(match token {
+                    Token::Power => a.powf(b),
                     Token::Plus => a + b,
                     Token::Minus => a - b,
                     Token::Multiply => a * b,
