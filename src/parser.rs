@@ -74,7 +74,12 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, CalcError> {
             '/' => Token::Divide,
             '(' => Token::LParen,
             ')' => Token::RParen,
-            _ => return Err(CalcError::InvalidToken(c.to_string())),
+            _ => {
+                return Err(CalcError::InvalidToken(format!(
+                    "Некорректный символ в выражении: '{}'",
+                    c
+                )));
+            }
         };
         tokens.push(token);
     }

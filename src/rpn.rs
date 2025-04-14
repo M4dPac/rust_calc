@@ -58,14 +58,19 @@ pub fn eval_rpn(mut rpn: VecDeque<Token>) -> Result<f64, CalcError> {
             Token::Number(num) => stack.push(num),
             Token::UnaryMinus => {
                 let Some(x) = stack.pop() else {
-                    return Err(CalcError::InvalidExpression("".to_string()));
+                    return Err(CalcError::InvalidExpression(
+                        "Унарный минус требует одного операнда".to_string(),
+                    ));
                 };
 
                 stack.push(-x);
             }
             _ => {
                 let (Some(b), Some(a)) = (stack.pop(), stack.pop()) else {
-                    return Err(CalcError::InvalidExpression("".to_string()));
+                    return Err(CalcError::InvalidExpression(format!(
+                        "Недостаточно операндов для операции '{:?}'",
+                        token
+                    )));
                 };
 
                 stack.push(match token {
@@ -78,7 +83,12 @@ pub fn eval_rpn(mut rpn: VecDeque<Token>) -> Result<f64, CalcError> {
                         }
                         a / b
                     }
-                    _ => return Err(CalcError::InvalidToken("".to_string())),
+                    _ => {
+                        return Err(CalcError::InvalidExpression(format!(
+                            "Неподдерживаемый токен: {:?}",
+                            token
+                        )));
+                    }
                 });
             }
         }
@@ -86,7 +96,12 @@ pub fn eval_rpn(mut rpn: VecDeque<Token>) -> Result<f64, CalcError> {
 
     match (stack.pop(), stack.is_empty()) {
         (Some(result), true) => Ok(result),
-        (_, _) => Err(CalcError::InvalidExpression("".to_string())),
+        (Some(_), _) => Err(CalcError::InvalidExpression(
+            "В стеке остались лишние числа".to_string(),
+        )),
+        (_, _) => Err(CalcError::InvalidExpression(
+            "Стек пуст после вычислений".to_string(),
+        )),
     }
 }
 
@@ -394,6 +409,9 @@ mod tests_eval_rpn {
         let tokens: VecDeque<Token> = vec![Token::Number(1.0), Token::Number(2.0), Token::LParen]
             .into_iter()
             .collect();
-        assert!(matches!(eval_rpn(tokens), Err(CalcError::InvalidToken(_))));
+        assert!(matches!(
+            eval_rpn(tokens),
+            Err(CalcError::InvalidExpression(_))
+        ));
     }
 }
