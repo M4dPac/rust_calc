@@ -112,7 +112,7 @@ mod tests_to_rpn {
     use crate::parser::Token;
 
     #[test]
-    fn test_to_rpn_simple_expression() {
+    fn test_simple_expression() {
         // 2 + 3
         let tokens = vec![Token::Number(2.0), Token::Plus, Token::Number(3.0)];
         let expected = vec![Token::Number(2.0), Token::Number(3.0), Token::Plus];
@@ -120,7 +120,7 @@ mod tests_to_rpn {
     }
 
     #[test]
-    fn test_to_rpn_complex_expression() {
+    fn test_complex_expression() {
         // 12.5 - 4.2 * (3 / 7)
         let tokens = vec![
             Token::Number(12.5),
@@ -133,6 +133,8 @@ mod tests_to_rpn {
             Token::Number(7.0),
             Token::RParen,
         ];
+
+        // 12.5 4.2 3 7 / * -
         let expected = vec![
             Token::Number(12.5),
             Token::Number(4.2),
@@ -146,7 +148,7 @@ mod tests_to_rpn {
     }
 
     #[test]
-    fn test_to_rpn_unmatched_parens() {
+    fn test_unmatched_parens() {
         // 1 + (2 * 3)
         let tokens = vec![
             Token::Number(1.0),
@@ -158,6 +160,7 @@ mod tests_to_rpn {
         ];
         assert!(matches!(to_rpn(tokens), Err(CalcError::UnmatchedParens)));
 
+        // 1 + 2 )
         let tokens = vec![
             Token::Number(1.0),
             Token::Plus,
@@ -168,7 +171,7 @@ mod tests_to_rpn {
     }
 
     #[test]
-    fn test_to_rpn_operator_precedence() {
+    fn test_operator_precedence() {
         // 1 + 2 * 3
         let tokens = vec![
             Token::Number(1.0),
@@ -177,6 +180,7 @@ mod tests_to_rpn {
             Token::Multiply,
             Token::Number(3.0),
         ];
+        // 1 2 3 * +
         let expected = vec![
             Token::Number(1.0),
             Token::Number(2.0),
@@ -194,6 +198,7 @@ mod tests_to_rpn {
             Token::Plus,
             Token::Number(3.0),
         ];
+        // 1 2 * 3 +
         let expected = vec![
             Token::Number(1.0),
             Token::Number(2.0),
@@ -205,7 +210,7 @@ mod tests_to_rpn {
     }
 
     #[test]
-    fn test_to_rpn_associativity() {
+    fn test_associativity() {
         // 1 - 2 - 3
         let tokens = vec![
             Token::Number(1.0),
@@ -214,6 +219,7 @@ mod tests_to_rpn {
             Token::Minus,
             Token::Number(3.0),
         ];
+        // 1 2 - 3 -
         let expected = vec![
             Token::Number(1.0),
             Token::Number(2.0),
@@ -225,7 +231,7 @@ mod tests_to_rpn {
     }
 
     #[test]
-    fn test_to_rpn_negative_number() {
+    fn test_negative_number() {
         // - 5
         let tokens = vec![Token::UnaryMinus, Token::Number(5.0)];
         let expected = vec![Token::Number(5.0), Token::UnaryMinus];
@@ -233,7 +239,7 @@ mod tests_to_rpn {
     }
 
     #[test]
-    fn test_to_rpn_negative_number_in_expression() {
+    fn test_negative_number_in_expression() {
         // 2 - (-3)
         let tokens = vec![
             Token::Number(2.0),
@@ -243,6 +249,7 @@ mod tests_to_rpn {
             Token::Number(3.0),
             Token::RParen,
         ];
+        // 2 3 - -
         let expected = vec![
             Token::Number(2.0),
             Token::Number(3.0),
@@ -266,6 +273,7 @@ mod tests_to_rpn {
             Token::UnaryMinus,
             Token::Number(3.0),
         ];
+        // 1 2 + - 3 - *
         let expected = vec![
             Token::Number(1.0),
             Token::Number(2.0),
@@ -274,6 +282,80 @@ mod tests_to_rpn {
             Token::Number(3.0),
             Token::UnaryMinus,
             Token::Multiply,
+        ];
+        assert_eq!(to_rpn(tokens).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_power_simple() {
+        // 2^3
+        let tokens = vec![Token::Number(2.0), Token::Power, Token::Number(3.0)];
+        // 2 3 ^
+        let expected = vec![Token::Number(2.0), Token::Number(3.0), Token::Power];
+        assert_eq!(to_rpn(tokens).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_power_priority() {
+        // 2^3*4
+        let tokens = vec![
+            Token::Number(2.0),
+            Token::Power,
+            Token::Number(3.0),
+            Token::Multiply,
+            Token::Number(4.0),
+        ];
+
+        // 2 3 ^ 4 *
+        let expected = vec![
+            Token::Number(2.0),
+            Token::Number(3.0),
+            Token::Power,
+            Token::Number(4.0),
+            Token::Multiply,
+        ];
+        assert_eq!(to_rpn(tokens).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_power_in_parens() {
+        // (2^3)^4
+        let tokens = vec![
+            Token::LParen,
+            Token::Number(2.0),
+            Token::Power,
+            Token::Number(3.0),
+            Token::RParen,
+            Token::Power,
+            Token::Number(4.0),
+        ];
+
+        // 2 3 ^ 4 ^
+        let expected = vec![
+            Token::Number(2.0),
+            Token::Number(3.0),
+            Token::Power,
+            Token::Number(4.0),
+            Token::Power,
+        ];
+        assert_eq!(to_rpn(tokens).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_unary_minus_power() {
+        // -2^3, интерпретируется как -(2^3)
+        let tokens = vec![
+            Token::UnaryMinus,
+            Token::Number(2.0),
+            Token::Power,
+            Token::Number(3.0),
+        ];
+        // 2 3 ^ -
+        let expected = vec![
+            Token::Number(2.0),
+            Token::Number(3.0),
+            Token::Power,
+            Token::UnaryMinus,
         ];
         assert_eq!(to_rpn(tokens).unwrap(), expected);
     }
@@ -286,7 +368,7 @@ mod tests_eval_rpn {
     use std::collections::VecDeque;
 
     #[test]
-    fn test_eval_rpn_simple_expression() {
+    fn test_simple_expression() {
         // Проверка простого сложения: 2 + 3
         let tokens: VecDeque<Token> = vec![Token::Number(2.0), Token::Number(3.0), Token::Plus]
             .into_iter()
@@ -295,7 +377,7 @@ mod tests_eval_rpn {
     }
 
     #[test]
-    fn test_eval_rpn_complex_expression() {
+    fn test_complex_expression() {
         // Проверка сложного выражения: 12.5 - 4.2 * (3 / 7)
         let tokens: VecDeque<Token> = vec![
             Token::Number(12.5),
@@ -312,7 +394,7 @@ mod tests_eval_rpn {
     }
 
     #[test]
-    fn test_eval_rpn_unary_minus() {
+    fn test_unary_minus() {
         // Проверка отрицательного числа: -5
         let tokens: VecDeque<Token> = vec![Token::Number(5.0), Token::UnaryMinus]
             .into_iter()
@@ -321,7 +403,7 @@ mod tests_eval_rpn {
     }
 
     #[test]
-    fn test_eval_rpn_unary_minus_in_expression() {
+    fn test_unary_minus_in_expression() {
         // Проверка унарного минуса внутри выражения: 2 - (-3)
         let tokens: VecDeque<Token> = vec![
             Token::Number(2.0),
@@ -335,7 +417,7 @@ mod tests_eval_rpn {
     }
 
     #[test]
-    fn test_eval_rpn_operator_precedence() {
+    fn test_operator_precedence() {
         // Проверка приоритета операторов: 1 + 2 * 3
         let tokens: VecDeque<Token> = vec![
             Token::Number(1.0),
@@ -362,7 +444,7 @@ mod tests_eval_rpn {
     }
 
     #[test]
-    fn test_eval_rpn_associativity() {
+    fn test_associativity() {
         // Проверка ассоциативности операторов: 1 - 2 - 3
         let tokens: VecDeque<Token> = vec![
             Token::Number(1.0),
@@ -377,7 +459,7 @@ mod tests_eval_rpn {
     }
 
     #[test]
-    fn test_eval_rpn_divide_by_zero() {
+    fn test_divide_by_zero() {
         // Проверка деления на ноль: 1 / 0
         let tokens: VecDeque<Token> = vec![Token::Number(1.0), Token::Number(0.0), Token::Divide]
             .into_iter()
@@ -386,7 +468,7 @@ mod tests_eval_rpn {
     }
 
     #[test]
-    fn test_eval_rpn_invalid_expression() {
+    fn test_invalid_expression() {
         // Проверка некорректного выражения: недостаточно операндов
         let tokens: VecDeque<Token> = vec![Token::Number(1.0), Token::Plus].into_iter().collect();
         assert!(matches!(
@@ -405,7 +487,7 @@ mod tests_eval_rpn {
     }
 
     #[test]
-    fn test_eval_rpn_invalid_token() {
+    fn test_invalid_token() {
         // Проверка некорректного токена: скобка в выражении
         let tokens: VecDeque<Token> = vec![Token::Number(1.0), Token::Number(2.0), Token::LParen]
             .into_iter()
@@ -414,5 +496,32 @@ mod tests_eval_rpn {
             eval_rpn(tokens),
             Err(CalcError::InvalidExpression(_))
         ));
+    }
+
+    #[test]
+    fn test_power_simple() {
+        // 2^3 → 8.0
+        let tokens = vec![Token::Number(2.0), Token::Number(3.0), Token::Power]
+            .into_iter()
+            .collect();
+        assert_eq!(eval_rpn(tokens).unwrap(), 8.0);
+    }
+
+    #[test]
+    fn test_power_negative_exponent() {
+        // 2^-3 → 0.125
+        let tokens = vec![Token::Number(2.0), Token::Number(-3.0), Token::Power]
+            .into_iter()
+            .collect();
+        assert_eq!(eval_rpn(tokens).unwrap(), 0.125);
+    }
+
+    #[test]
+    fn test_power_zero_base() {
+        // 0^-2 → Ошибка (деление на ноль)
+        let tokens = vec![Token::Number(0.0), Token::Number(-2.0), Token::Power]
+            .into_iter()
+            .collect();
+        assert!(matches!(eval_rpn(tokens), Err(CalcError::DivideByZero)));
     }
 }
