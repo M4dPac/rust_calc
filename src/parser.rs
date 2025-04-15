@@ -304,6 +304,120 @@ mod tests_tokenize {
         ];
         assert_eq!(tokens, expected);
     }
+
+    #[test]
+    fn test_tokenize_poser_simple() {
+        let input = "2^3";
+        let expected = vec![Token::Number(2.0), Token::Power, Token::Number(3.0)];
+        assert_eq!(tokenize(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_tokenize_multiple_powers() {
+        let input = "2^3^4";
+        let expected = vec![
+            Token::Number(2.0),
+            Token::Power,
+            Token::Number(3.0),
+            Token::Power,
+            Token::Number(4.0),
+        ];
+        assert_eq!(tokenize(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_tokenize_power_with_other_ops() {
+        let input = "5 + 2^3";
+        let expected = vec![
+            Token::Number(5.0),
+            Token::Plus,
+            Token::Number(2.0),
+            Token::Power,
+            Token::Number(3.0),
+        ];
+        assert_eq!(tokenize(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_tokenize_power_in_parens() {
+        let input = "(2^3) + 4";
+        let expected = vec![
+            Token::LParen,
+            Token::Number(2.0),
+            Token::Power,
+            Token::Number(3.0),
+            Token::RParen,
+            Token::Plus,
+            Token::Number(4.0),
+        ];
+        assert_eq!(tokenize(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_tokenize_unary_minus_power() {
+        let input = "-2^3";
+        let expected = vec![
+            Token::UnaryMinus,
+            Token::Number(2.0),
+            Token::Power,
+            Token::Number(3.0),
+        ];
+        assert_eq!(tokenize(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_tokenize_invalid_after_power() {
+        let input = "2^a";
+        assert!(matches!(tokenize(input), Err(CalcError::InvalidToken(_))));
+    }
+
+    #[test]
+    fn test_tokenize_power_with_spaces() {
+        let input = "2 ^ 3";
+        let expected = vec![Token::Number(2.0), Token::Power, Token::Number(3.0)];
+        assert_eq!(tokenize(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_tokenize_power_with_decimal() {
+        let input = "2^3.5";
+        let expected = vec![Token::Number(2.0), Token::Power, Token::Number(3.5)];
+        assert_eq!(tokenize(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_tokenize_negative_power() {
+        let input = "2^-3";
+        let expected = vec![
+            Token::Number(2.0),
+            Token::Power,
+            Token::UnaryMinus,
+            Token::Number(3.0),
+        ];
+        assert_eq!(tokenize(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_tokenize_power_at_start() {
+        let input = "^2";
+        let expected = vec![Token::Power, Token::Number(2.0)];
+        assert_eq!(tokenize(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_tokenize_power_inside_parens() {
+        let input = "(2^3)^4";
+        let expected = vec![
+            Token::LParen,
+            Token::Number(2.0),
+            Token::Power,
+            Token::Number(3.0),
+            Token::RParen,
+            Token::Power,
+            Token::Number(4.0),
+        ];
+        assert_eq!(tokenize(input).unwrap(), expected);
+    }
 }
 
 // Тесты для precedence
@@ -348,6 +462,7 @@ mod tests_precedence {
         let multiply = Token::Multiply;
         let lparen = Token::LParen;
         let rparen = Token::RParen;
+        let power = Token::Power;
 
         assert!(number.precedence() < plus.precedence());
         assert!(number.precedence() < multiply.precedence());
@@ -373,6 +488,9 @@ mod tests_precedence {
         assert!(rparen.precedence() < multiply.precedence());
         assert!(rparen.precedence() < plus.precedence());
         assert_eq!(rparen.precedence(), lparen.precedence());
+
+        assert!(power.precedence() > multiply.precedence());
+        assert!(power.precedence() > plus.precedence());
     }
 }
 
@@ -521,5 +639,22 @@ mod tests_validate_parens {
             validate_parens(&tokens),
             Err(CalcError::UnmatchedParens)
         ));
+    }
+
+    #[test]
+    // (2^(3+4))
+    fn test_validate_parens_power_nested() {
+        let tokens = vec![
+            Token::LParen,
+            Token::Number(2.0),
+            Token::Power,
+            Token::LParen,
+            Token::Number(3.0),
+            Token::Plus,
+            Token::Number(4.0),
+            Token::RParen,
+            Token::RParen,
+        ];
+        assert_eq!(validate_parens(&tokens), Ok(()));
     }
 }
