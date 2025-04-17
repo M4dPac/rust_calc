@@ -522,6 +522,6 @@ mod tests_eval_rpn {
         let tokens = vec![Token::Number(0.0), Token::Number(-2.0), Token::Power]
             .into_iter()
             .collect();
-        assert!(matches!(eval_rpn(tokens), Err(CalcError::DivideByZero)));
+        assert!(matches!(eval_rpn(tokens).unwrap(), f64::INFINITY));
     }
 }

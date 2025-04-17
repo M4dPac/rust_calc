@@ -64,7 +64,8 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, CalcError> {
                     | Some(Token::Plus)
                     | Some(Token::Minus)
                     | Some(Token::Multiply)
-                    | Some(Token::Divide) => true,
+                    | Some(Token::Divide)
+                    | Some(Token::Power) => true,
                     _ => false,
                 };
                 if is_unary {
