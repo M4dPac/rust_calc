@@ -1,9 +1,18 @@
+use calculator::{error::CalcError, parser, rpn};
 use std::io;
 
-use calculator::{error::CalcError, parser, rpn};
-
 fn main() {
-    run_repl().unwrap();
+    loop {
+        println!("Введите выражение (или 'exit' для выхода):");
+        let input = read_input();
+        if &input == "exit" {
+            break;
+        }
+        match run_repl(&input) {
+            Ok(num) => println!("{}", num),
+            Err(e) => eprintln!("{}", e),
+        }
+    }
 }
 
 fn read_input() -> String {
@@ -13,27 +22,14 @@ fn read_input() -> String {
             eprintln!("Ошибка чтения ввода.");
             continue;
         }
-
         return s.trim().to_owned();
     }
 }
 
-fn run_repl() -> Result<(), CalcError> {
-    println!("Введите выражение (или 'exit' для выхода):");
-    loop {
-        let input = read_input();
-
-        if &input == "exit" {
-            break;
-        }
-
-        let tokens = parser::tokenize(&input)?;
-        parser::validate_parens(&tokens)?;
-        let rpn = rpn::to_rpn(tokens)?;
-        let result = rpn::eval_rpn(rpn)?;
-
-        println!("{:?}", result);
-    }
-
-    Ok(())
+/// Обрабатывает выражение и возвращает результат
+fn run_repl(input: &str) -> Result<f64, CalcError> {
+    let tokens = parser::tokenize(input)?;
+    parser::validate_parens(&tokens)?;
+    let rpn = rpn::to_rpn(tokens)?;
+    rpn::eval_rpn(rpn)
 }
