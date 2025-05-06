@@ -342,6 +342,28 @@ mod tests_to_rpn {
     }
 
     #[test]
+    fn test_power_associativity() {
+        // 2^3^2
+        let tokens = vec![
+            Token::Number(2.0),
+            Token::Power,
+            Token::Number(3.0),
+            Token::Power,
+            Token::Number(4.0),
+        ];
+
+        // 2 3 4 ^ ^
+        let expected = vec![
+            Token::Number(2.0),
+            Token::Number(3.0),
+            Token::Number(4.0),
+            Token::Power,
+            Token::Power,
+        ];
+        assert_eq!(to_rpn(tokens).unwrap(), expected);
+    }
+
+    #[test]
     fn test_unary_minus_power() {
         // -2^3, интерпретируется как -(2^3)
         let tokens = vec![
