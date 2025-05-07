@@ -2,17 +2,41 @@ use calculator::{error::CalcError, output, parser, rpn};
 use std::io;
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+
+    if args.len() > 1 {
+        // Режим CLI
+        // FIX: сделать обработку передачи выражения с пробелами или заключатъ выражение в ""
+        let input = args[1].trim();
+        match run_repl(input) {
+            Ok(num) => println!("{}", num),
+            Err(e) => {
+                eprintln!("{}", e);
+                std::process::exit(1);
+            }
+        }
+        return;
+    }
+
+    // Итерактивный режим
+    run_repl_interactive().unwrap();
+}
+
+fn run_repl_interactive() -> Result<(), CalcError> {
+    output::print_prompt();
     loop {
-        println!("Введите выражение (или 'exit' для выхода):");
         let input = read_input();
         if &input == "exit" {
             break;
         }
+
         match run_repl(&input) {
-            Ok(num) => println!("{}", num),
-            Err(e) => eprintln!("{}", e),
+            Ok(num) => output::print_result(num),
+            Err(e) => output::print_error(&e.to_string()),
         }
     }
+
+    Ok(())
 }
 
 fn read_input() -> String {

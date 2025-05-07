@@ -17,7 +17,7 @@ pub fn supports_ansi() -> bool {
 // Форматированный вывод ошибок
 pub fn print_error(message: &str) {
     if is_interactive() && supports_ansi() {
-        eprint!("{}Error:{} {}", RED, RESET, message);
+        eprintln!("{}Error:{} {}", RED, RESET, message);
     } else {
         eprintln!("Error: {}", message)
     }

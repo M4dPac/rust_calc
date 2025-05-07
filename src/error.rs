@@ -20,7 +20,7 @@ impl fmt::Display for CalcError {
             CalcError::InvalidExpression(expr) => format!("Некорректное выражение: {}", expr),
         };
 
-        write!(f, "Error: {}", message)
+        write!(f, "{}", message)
     }
 }
 
