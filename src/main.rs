@@ -1,4 +1,4 @@
-use calculator::{error::CalcError, parser, rpn};
+use calculator::{error::CalcError, output, parser, rpn};
 use std::io;
 
 fn main() {
