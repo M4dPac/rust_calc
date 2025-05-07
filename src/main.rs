@@ -4,6 +4,7 @@ use std::io;
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
+    // TODO: убрать проверку is_interactive из output.rs
     if args.len() > 1 {
         // Режим CLI
         // FIX: сделать обработку передачи выражения с пробелами или заключатъ выражение в ""
@@ -11,7 +12,7 @@ fn main() {
         match run_repl(input) {
             Ok(num) => println!("{}", num),
             Err(e) => {
-                eprintln!("{}", e);
+                eprintln!("Error: {}", e);
                 std::process::exit(1);
             }
         }
@@ -103,7 +104,7 @@ mod tests_run_repl {
     #[test]
     fn test_divide_by_zero() {
         let err = run_repl("1 / 0").unwrap_err();
-        assert_eq!(err.to_string(), "Error: Деление на 0.");
+        assert_eq!(err.to_string(), "Деление на 0.");
     }
 
     #[test]
@@ -121,13 +122,13 @@ mod tests_run_repl {
     #[test]
     fn test_unmatched_parens() {
         let err = run_repl("(2 + 3").unwrap_err();
-        assert_eq!(err.to_string(), "Error: Не совпадают скобки.");
+        assert_eq!(err.to_string(), "Не совпадают скобки.");
 
         let err = run_repl("2 + 3)").unwrap_err();
-        assert_eq!(err.to_string(), "Error: Не совпадают скобки.");
+        assert_eq!(err.to_string(), "Не совпадают скобки.");
 
         let err = run_repl("((2 + 3) * 4").unwrap_err();
-        assert_eq!(err.to_string(), "Error: Не совпадают скобки.");
+        assert_eq!(err.to_string(), "Не совпадают скобки.");
     }
 
     #[test]
@@ -152,33 +153,33 @@ mod tests_run_repl {
         assert!(matches!(err, CalcError::InvalidExpression(_)));
         assert_eq!(
             err.to_string(),
-            "Error: Некорректное выражение: Стек пуст после вычислений"
+            "Некорректное выражение: Стек пуст после вычислений"
         );
 
         // Незакрытая скобка
         let err = run_repl(")").unwrap_err();
         assert!(matches!(err, CalcError::UnmatchedParens));
-        assert_eq!(err.to_string(), "Error: Не совпадают скобки.");
+        assert_eq!(err.to_string(), "Не совпадают скобки.");
 
         // Некорректный оператор
         let err = run_repl("1 + 2 * / 3").unwrap_err();
         assert!(matches!(err, CalcError::InvalidExpression(_)));
         assert_eq!(
             err.to_string(),
-            "Error: Некорректное выражение: Недостаточно операндов для операции 'Plus'"
+            "Некорректное выражение: Недостаточно операндов для операции 'Plus'"
         );
 
         // Деление на ноль
         let err = run_repl("1 / 0").unwrap_err();
         assert!(matches!(err, CalcError::DivideByZero));
-        assert_eq!(err.to_string(), "Error: Деление на 0.");
+        assert_eq!(err.to_string(), "Деление на 0.");
 
         // Недостаточно операндов для операции
         let err = run_repl("1 +").unwrap_err();
         assert!(matches!(err, CalcError::InvalidExpression(_)));
         assert_eq!(
             err.to_string(),
-            "Error: Некорректное выражение: Недостаточно операндов для операции 'Plus'"
+            "Некорректное выражение: Недостаточно операндов для операции 'Plus'"
         );
 
         // Унарная операция без операнда
@@ -186,7 +187,7 @@ mod tests_run_repl {
         assert!(matches!(err, CalcError::InvalidExpression(_)));
         assert_eq!(
             err.to_string(),
-            "Error: Некорректное выражение: Унарный минус требует одного операнда"
+            "Некорректное выражение: Унарный минус требует одного операнда"
         );
 
         // Лишние числа в стеке
@@ -194,7 +195,7 @@ mod tests_run_repl {
         assert!(matches!(err, CalcError::InvalidExpression(_)));
         assert_eq!(
             err.to_string(),
-            "Error: Некорректное выражение: В стеке остались лишние числа"
+            "Некорректное выражение: В стеке остались лишние числа"
         );
 
         // Некорректный токен
@@ -202,30 +203,30 @@ mod tests_run_repl {
         assert!(matches!(err, CalcError::InvalidToken(_)));
         assert_eq!(
             err.to_string(),
-            "Error: Некорректный символ: Некорректный символ в выражении: 'a'"
+            "Некорректный символ: Некорректный символ в выражении: 'a'"
         );
 
         // Несколько точек в числе
         let err = run_repl("1.2.3").unwrap_err();
         assert!(matches!(err, CalcError::InvalidToken(_)));
-        assert_eq!(err.to_string(), "Error: Некорректный символ: 1.2.3");
+        assert_eq!(err.to_string(), "Некорректный символ: 1.2.3");
 
         // Незакрытые скобки в начале выражения
         let err = run_repl("((2 + 3)").unwrap_err();
         assert!(matches!(err, CalcError::UnmatchedParens));
-        assert_eq!(err.to_string(), "Error: Не совпадают скобки.");
+        assert_eq!(err.to_string(), "Не совпадают скобки.");
 
         // Лишние закрывающие скобки
         let err = run_repl("2 + 3))").unwrap_err();
         assert!(matches!(err, CalcError::UnmatchedParens));
-        assert_eq!(err.to_string(), "Error: Не совпадают скобки.");
+        assert_eq!(err.to_string(), "Не совпадают скобки.");
 
         // Оператор в конце выражения без операндов
         let err = run_repl("5 + 2 *").unwrap_err();
         assert!(matches!(err, CalcError::InvalidExpression(_)));
         assert_eq!(
             err.to_string(),
-            "Error: Некорректное выражение: Недостаточно операндов для операции 'Plus'"
+            "Некорректное выражение: Недостаточно операндов для операции 'Plus'"
         );
     }
 }

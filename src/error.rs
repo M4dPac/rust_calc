@@ -35,25 +35,22 @@ mod tests {
     #[test]
     fn test_calcerror_invalid_token() {
         let error = CalcError::InvalidToken("abc".to_string());
-        assert_eq!(format!("{}", error), "Error: Некорректный символ: abc");
+        assert_eq!(format!("{}", error), "Некорректный символ: abc");
     }
 
     #[test]
     fn test_calcerror_unmatched_parens() {
         let error = CalcError::UnmatchedParens;
-        assert_eq!(format!("{}", error), "Error: Не совпадают скобки.");
+        assert_eq!(format!("{}", error), "Не совпадают скобки.");
     }
     #[test]
     fn test_calcerror_divide_by_zero() {
         let error = CalcError::DivideByZero;
-        assert_eq!(format!("{}", error), "Error: Деление на 0.");
+        assert_eq!(format!("{}", error), "Деление на 0.");
     }
     #[test]
     fn test_calcerror_invalid_expression() {
         let error = CalcError::InvalidExpression("1 + 2 *".to_string());
-        assert_eq!(
-            format!("{}", error),
-            "Error: Некорректное выражение: 1 + 2 *"
-        );
+        assert_eq!(format!("{}", error), "Некорректное выражение: 1 + 2 *");
     }
 }
