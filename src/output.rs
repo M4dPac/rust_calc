@@ -5,8 +5,8 @@ pub const YELLOW: &str = "\x1b[33m";
 pub const RESET: &str = "\x1b[0m";
 
 // Проверяет, запущен ли в интерактивном режиме
-pub fn is_interactive() -> bool {
-    std::env::args().len() == 1
+pub fn is_not_interactive() -> bool {
+    std::env::args().len() > 1
 }
 
 // Проверяет, поддерживает ли терминал ANSI-цвета
@@ -16,7 +16,7 @@ pub fn supports_ansi() -> bool {
 
 // Форматированный вывод ошибок
 pub fn print_error(message: &str) {
-    if is_interactive() && supports_ansi() {
+    if supports_ansi() {
         eprintln!("{}Error:{} {}", RED, RESET, message);
     } else {
         eprintln!("Error: {}", message)
@@ -25,7 +25,7 @@ pub fn print_error(message: &str) {
 
 // Форматированный вывод результата
 pub fn print_result(result: f64) {
-    if is_interactive() && supports_ansi() {
+    if supports_ansi() {
         println!("{}Результат: {}{}", GREEN, result, RESET);
     } else {
         println!("{}", result)
@@ -34,7 +34,7 @@ pub fn print_result(result: f64) {
 
 // Форматированный вывод приглашения
 pub fn print_prompt() {
-    if is_interactive() && supports_ansi() {
+    if supports_ansi() {
         println!(
             "{}Введите выражение (или 'exit' для выхода):{}",
             YELLOW, RESET

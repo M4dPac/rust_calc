@@ -4,8 +4,7 @@ use std::io;
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
-    // TODO: убрать проверку is_interactive из output.rs
-    if args.len() > 1 {
+    if output::is_not_interactive() {
         // Режим CLI
         // FIX: сделать обработку передачи выражения с пробелами или заключатъ выражение в ""
         let input = args[1].trim();
